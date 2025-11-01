@@ -1,0 +1,118 @@
+import org.gradle.jvm.tasks.Jar
+
+plugins {
+    id 'fabric-loom' version '1.8-SNAPSHOT'
+    id 'maven-publish'
+    id 'com.google.protobuf' version '0.9.4'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://maven.fabricmc.net/' }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    implementation 'com.google.protobuf:protobuf-java:3.25.1'
+    include 'com.google.protobuf:protobuf-java:3.25.1'
+
+    implementation 'org.hibernate.orm:hibernate-core:6.4.1.Final'
+    include 'org.hibernate.orm:hibernate-core:6.4.1.Final'
+
+    implementation 'org.postgresql:postgresql:42.7.1'
+    include 'org.postgresql:postgresql:42.7.1'
+
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+    include 'com.zaxxer:HikariCP:5.1.0'
+
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+
+    implementation 'org.hibernate.orm:hibernate-hikaricp:6.4.1.Final'
+    include 'org.hibernate.orm:hibernate-hikaricp:6.4.1.Final'
+
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.25.1'
+    }
+
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {}
+            }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main/java', 'build/generated/source/proto/main/java'
+        }
+        proto {
+            srcDirs 'src/main/proto'
+        }
+    }
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraft_version", project.minecraft_version
+    inputs.property "loader_version", project.loader_version
+    filteringCharset "UTF-8"
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    exclude '**/*.proto'
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version,
+                "minecraft_version": project.minecraft_version,
+                "loader_version": project.loader_version
+    }
+}
+
+def targetJavaVersion = 21
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        it.options.release.set(targetJavaVersion)
+    }
+}
+
+tasks.named('compileJava') {
+    dependsOn 'generateProto'
+}
+
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+    withSourcesJar()
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.base.archivesName.get()}"}
+    }
+
+    zip64 = true
+}

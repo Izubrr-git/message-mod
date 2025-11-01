@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "messagemod",
+  "version": "${version}",
+  "name": "Message Mod",
+  "description": "A mod for sending messages to PostgreSQL database",
+  "authors": [
+    "YourName"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/messagemod/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.example.messagemod.MessageMod"
+    ],
+    "client": [
+      "com.example.messagemod.MessageModClient"
+    ]
+  },
+  "mixins": [],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}",
+    "java": ">=21"
+  }
+}

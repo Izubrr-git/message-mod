@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package message;
+
+option java_package = "com.example.messagemod.proto";
+option java_outer_classname = "MessageProto";
+
+message Message {
+  string text = 1;
+}
